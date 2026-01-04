@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_  # <--- Il manquait cet import !
+from sqlalchemy import or_ 
 from app.models.user_model import User
 
 def get_user_by_email(db: Session, email: str):

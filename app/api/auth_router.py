@@ -58,7 +58,11 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(401, "Identifiants invalides")
 
     access, refresh = generate_tokens(user.id)
-    return {"access_token": access, "refresh_token": refresh}
+    return {
+        "access_token": access, 
+        "refresh_token": refresh,
+        "user": user
+    }
 
 @router.post("/upload-photo/{user_id}")
 def upload_profile_photo(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -80,6 +84,25 @@ def upload_profile_photo(user_id: int, file: UploadFile = File(...), db: Session
     db.commit()
 
     return {"info": "Photo de profil mise à jour", "path": file_path}
+
+
+@router.delete("/delete-photo/{user_id}")
+def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(404, "Utilisateur non trouvé")
+    
+    if db_user.profile_photo and os.path.exists(db_user.profile_photo):
+        try:
+            os.remove(db_user.profile_photo)
+        except Exception:
+            pass
+
+    db_user.profile_photo = None
+    db.commit()
+
+    return {"message": "Photo de profil supprimée"}
+
 
 @router.post("/forgot-password")
 async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
