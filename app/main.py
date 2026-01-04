@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.database.base import Base
 from app.database.session import engine
 from app.api.auth_router import router as auth_router
+from app.api.chat_router import router as chat_router
+from app.core.websocket_manager import manager
 from fastapi.staticfiles import StaticFiles
+from typing import Dict
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -26,3 +29,13 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router)
+app.include_router(chat_router)
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    await manager.connect(user_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)

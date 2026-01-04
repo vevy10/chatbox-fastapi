@@ -43,3 +43,14 @@ class ResetPasswordSchema(BaseModel):
     identifier: str
     code: str
     new_password: str
+    
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    profile_photo: Optional[str] = None
+
+    class Config:
+        from_attributes = True

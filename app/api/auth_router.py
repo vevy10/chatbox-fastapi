@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
-from app.schemas.user_schema import UserCreate, UserLogin, Token, ForgotPasswordRequest, ResetPasswordSchema
+from app.schemas.user_schema import UserCreate, UserLogin, Token, ForgotPasswordRequest, ResetPasswordSchema, UserResponse
 from app.repositories.user_repo import create_user, get_user_by_identifier
 from app.models.user_model import User
 from app.core.security import hash_password, verify_password
@@ -145,3 +145,8 @@ def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Mot de passe mis à jour avec succès"}
+
+@router.get("/users", response_model=list[UserResponse])
+def get_all_users(db: Session = Depends(get_db)):
+
+    return db.query(User).all()
