@@ -31,11 +31,31 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
 app.include_router(chat_router)
 
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     await manager.connect(user_id, websocket)
     try:
         while True:
-            await websocket.receive_text()
+            data = await websocket.receive_json()
+            if data.get("type") == "typing":
+                payload = {
+                    "type": "typing",
+                    "sender_id": user_id,
+                    "is_typing": data.get("is_typing")
+                }
+                await manager.send_personal_message(payload, data.get("receiver_id"))
+                
+            elif data.get("type") == "read_receipt":
+                payload = {
+                    "type": "read_receipt",
+                    "message_id": data.get("message_id"),
+                    "reader_id": user_id
+                }
+                await manager.send_personal_message(payload, data.get("sender_id"))
+
     except WebSocketDisconnect:
-        manager.disconnect(user_id)
+        await manager.disconnect(user_id)
+    except Exception as e:
+        print(f"Erreur socket: {e}")
+        await manager.disconnect(user_id)

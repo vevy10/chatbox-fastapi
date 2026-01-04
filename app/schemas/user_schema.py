@@ -20,6 +20,7 @@ class UserOut(BaseModel):
     email: Optional[str]
     phone: Optional[str]
     profile_photo: Optional[str]
+    last_message: Optional[str] = None
 
     class Config:
         from_attributes = True
